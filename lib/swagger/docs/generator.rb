@@ -138,7 +138,7 @@ module Swagger
               models.merge!(ret[:models])
               defined_nicknames << ret[:nickname] if ret[:nickname].present?
             end
-          end
+		  end 
           {action: :processed, path: path, apis: apis, models: models, klass: klass}
         end
 
@@ -148,11 +148,10 @@ module Swagger
 
         def path_route_nickname(path, route)
           action = route.defaults[:action]
-          "#{path.camelize}##{action}"
+          "#{route.path.source}##{action}"
         end
 
         def nickname_defined?(defined_nicknames, path, route)
-          verb = route_verb(route)
           target_nickname = path_route_nickname(path, route)
           defined_nicknames.each{|nickname| return true if nickname == target_nickname }
           false
@@ -182,7 +181,7 @@ module Swagger
 
           route_path = if defined?(route.path.spec) then route.path.spec else route.path end
           api_path = transform_spec_to_api_path(route_path, settings[:controller_base_path], config[:api_extension_type])
-          operations[:parameters] = filter_path_params(api_path, operations[:parameters]) if operations[:parameters]
+          operations[:parameters] = filter_path_params(route,api_path, operations[:parameters]) if operations[:parameters]
 
           apis << {:path => api_path, :operations => [operations]}
           models = get_klass_models(klass)
@@ -242,7 +241,26 @@ module Swagger
           File.open(path, 'w') { |file| file.write content }
         end
 
-        def filter_path_params(path, params)
+        def filter_path_params(route,path, params)
+			route.path.optional_names.each do |optional_name|
+				params.unshift({
+					:param_type=>:path, 
+					:name=>"#{optional_name}", 
+					:description=>"#{optional_name.camelize}", 
+					:type=>:integer, 
+					:required=>false
+				})
+			end 
+			route.path.required_names.each do |required_name|
+				params.unshift({
+					:param_type=>:path, 
+					:name=>"#{required_name}", 
+					:description=>"#{required_name.camelize}", 
+					:type=>:integer, 
+					:required=>true
+				})
+			end
+
           params.reject do |param|
             param_as_variable = "{#{param[:name]}}"
             param[:param_type] == :path && !path.include?(param_as_variable)
