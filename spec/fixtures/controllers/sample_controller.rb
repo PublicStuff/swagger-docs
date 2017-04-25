@@ -31,6 +31,7 @@ module Api
         param :form, :email, :string, :required, "Email address"
         param_list :form, :role, :string, :required, "Role", [ "admin", "superadmin", "user" ]
         param :body, :body, :json, :required, 'JSON formatted body'
+        items '{$ref" => "setup"}'
         response :unauthorized
         response :not_acceptable
       end
@@ -73,6 +74,7 @@ module Api
         description "A Tag object."
         property :id, :integer, :required, "User Id"
         property :name, :string, :optional, "Name", foo: "test"
+        property_list :type, :string, :optional, "Type", ["info", "warning", "error"]
       end
     end
   end

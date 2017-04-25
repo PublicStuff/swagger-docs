@@ -2,14 +2,19 @@
 
 Generates swagger-ui json files for rails apps with APIs. You add the swagger DSL to your controller classes and then run one rake task to generate the json files.
 
-[![Gem Version](https://badge.fury.io/rb/swagger-docs.png)][gem]
-[![Dependency Status](https://gemnasium.com/richhollis/swagger-docs.png?travis)][gemnasium]
+[![Gem Version](https://badge.fury.io/rb/swagger-docs.svg)][gem]
+[![Dependency Status](https://gemnasium.com/richhollis/swagger-docs.svg?travis)][gemnasium]
 
 [gem]: https://rubygems.org/gems/swagger-docs
 [travis]: http://travis-ci.org/richhollis/swagger-docs
 [gemnasium]: https://gemnasium.com/richhollis/swagger-docs
 [coveralls]: https://coveralls.io/r/richhollis/swagger-docs
 
+## Swagger Version Specification Support
+
+This project supports elements of the v1.2 swagger specification. It *does not* support the v2 specification. If you are looking for support for the newer specification the please see the [swagger-blocks](https://github.com/fotinakis/swagger-blocks/) project. I don't currently have any plans to add support for v2.0 at this time due to time constraints, but I'm open to accepting a PR on  this. Contact me if you are interested in helping with that effort - thanks!
+
+## Example usage
 
 Here is an extract of the DSL from a user controller API class:
 
@@ -57,6 +62,8 @@ Swagger::Docs::Config.register_apis({
     :base_path => "http://api.somedomain.com",
     # if you want to delete all .json files at each generation
     :clean_directory => false,
+    # Ability to setup base controller for each api version. Api::V1::SomeController for example.
+    :parent_controller => Api::V1::SomeController,
     # add custom attributes to api-docs
     :attributes => {
       :info => {
@@ -128,6 +135,12 @@ The following table shows all the current configuration options and their defaul
 <td>true</td>
 </tr>
 
+<tr>
+<td><b>parent_controller</b></td>
+<td>Assign a different controller to use for the configuration</td>
+<td></td>
+</tr>
+
 </tbody>
 </table>
 
@@ -193,9 +206,23 @@ class Api::V1::UsersController < ApplicationController
     description "A Tag object."
     property :id, :integer, :required, "User Id"
     property :name, :string, :optional, "Name"
+    property_list :type, :string, :optional, "Tag Type", ["info", "warning", "error"]
   end
-
 end
+```
+
+#### Support for Enums (PR #108)
+
+```
+property_list :type, :string, :optional, "Type", ["info", "warning", "error"]
+```
+
+#### Custom resource paths`(PR #126)
+
+```ruby
+class Api::V1::UsersController < ApplicationController
+
+  swagger_controller :users, "User Management", resource_path: "/some/where"
 ```
 
 ### DRYing up common documentation
